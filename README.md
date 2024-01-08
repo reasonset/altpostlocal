@@ -108,3 +108,45 @@ JSON data is
 }
 ```
 
+# Replace Postfix's local/virtual
+
+## configure master.cf
+
+Add altpostlocal to `master.cf`.
+
+```
+altpostlocal    unix  -       n       n       -       -       pipe
+  flags=F user=email argv=/usr/local/bin/altpostlocal -f ${sender} -- ${recipient}
+```
+
+user and argv should be rewritten according to your environment.
+
+## configure main.cf
+
+### local\_transport
+
+Set altpostlocal to `local_transport`.
+
+```
+local_transport = altpostlocal
+```
+
+### local\_recipient\_maps
+
+Set empty to `local_recipient_maps` for never reject e-mail to the destination listed in mydestination.
+
+```
+local_recipient_maps =
+```
+
+### mydestination
+
+List *all* destination domains in `mydestination`.
+
+```
+mydestination = example.com, example.net, example.org, example.info
+```
+
+Note: Don't use `virtual_mailbox_domains`.
+
+
