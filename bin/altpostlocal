@@ -1,0 +1,198 @@
+#!/usr/bin/ruby
+require 'yaml'
+require 'json'
+require 'optparse'
+require 'socket'
+
+class AltPostLocal
+  def self.parse
+    op = OptionParser.new
+    opts = {}
+    op.on("-f from", "--sender")
+    op.parse!(ARGV, into: opts)
+    opts[:recipients] = ARGV
+
+    opts
+  end
+
+  def initialize sender, recipients
+    @config = YAML.load(File.read("/etc/altpostlocal/altpostlocal.yaml"))
+    @sender = sender
+    @recipients = recipients
+    @extension = Regexp.new @config["extension"] if @config["extension"]
+    @body = STDIN.read
+  end
+
+  def main
+    rematch
+    @recipients.each do |recp|
+      acts = match recp
+      while acts.any? {|i| i["type"] == "alias" }
+        acts = acts.map {|i| i["type"] == "alias" ? match(i["value"]) : i } 
+        acts.flatten!
+      end
+
+      acts.each do |act|
+        action act
+      end
+    end
+  rescue => e
+    STDERR.puts e.to_s
+    onerror
+  end
+
+  def rematch
+    if Hash === @config["rematch"]
+      rem = {}
+      @config["rematch"].each do |k, v|
+        rem[Regexp.new(k)] = v
+      end
+      @recipients = @recipients.map do |addr|
+        mk, mv = rem.detect do |k, v|
+          k === addr
+        end
+        if mk
+          mv
+        else
+          addr
+        end
+      end
+    end
+  end
+
+  def match recp
+    matched = nil
+
+    # Full match
+    matched = @config["aliases"][recp]
+    return matchformat matched if matched
+
+    # Userpart extension
+    user, domain = *recp.split("@", 2)
+    until matched
+      index = user.rindex(@extension) if @extension
+      break unless index
+
+      user = user[0, index]
+      matched = @config["aliases"][[user, domain].join("@")]
+    end
+    return matchformat matched if matched
+
+    # Without domain
+    if domain
+      user, domain = *recp.split("@", 2)
+      matched = @config["aliases"][user]
+      until matched
+        index = user.rindex(@extension) if @extension
+        break unless index
+  
+        user = user[0, index]
+        matched = @config["aliases"][user]
+      end
+      return matchformat matched if matched
+    end
+
+    # Default action
+    unless matched
+      matched = @config["default"]
+    end
+
+    # Convert to array.
+    matchformat matched
+
+    matched
+  end
+
+  def matchformat matched
+    Array === matched ? matched : [matched]
+  end
+
+  def action act
+    pp act
+    case act["type"]
+    when "maildir"
+      maildir act
+    when "pipe"
+      pipe act
+    when "dump"
+      dump act
+    else
+      raise UndefinedAction
+    end
+  end
+
+  def pipe act
+    IO.popen(act["value"], "w") do |io|
+      io.print @body
+      io.close
+    end
+
+    status = $?
+    raise PipeNonZero unless status.success?
+  end
+
+  def dump act
+    now = Time.now
+    File.open(File.join(act["value"], sprintf("%d.%d.%d.json", now.to_i, now.nsec, Process.pid)), "w") do |f|
+      JSON.dump({
+        "sender" => @sender,
+        "recipients" => @recipients,
+        "mail": @body
+      }, f)
+    end
+  end
+
+  def maildir act
+    filename = maildir_fn
+    File.open(File.join(act["value"].delete_suffix("/"), "new", filename), "w") do |f|
+      f.print @body
+    end
+  end
+
+  def onerror
+    if String === @config["rescue"] and File.directory? @config["rescue"]
+      filename = maildir_fn
+      File.open(File.join(@config["rescue"].delete_suffix("/"), filename), "w") do |f|
+        if @config["rescue_json"]
+          JSON.dump({
+            "sender" => @sender,
+            "recipients" => @recipients,
+            "mail" => @body
+          }, f)
+        else
+          f.print @body
+        end
+      end
+    else
+      exit 78
+    end
+  rescue => e
+    if @config["die_quietly"]
+      exit 0
+    else
+      raise e
+    end
+  end
+
+  def maildir_fn
+    now = Time.now
+    name = sprintf("%d.M%dP%d.%s:2", now.to_i, now.nsec / 1000, Process.pid, Socket.gethostname)
+
+    name
+  end
+
+  #Exceptions
+
+  class UnableToWrite < StandardError
+  end
+
+  class PipeNonZero < StandardError
+  end
+
+  class UndefinedAction < StandardError
+  end
+end
+
+opts = AltPostLocal.parse
+apl = AltPostLocal.new opts[:sender], opts[:recipients]
+apl.main
