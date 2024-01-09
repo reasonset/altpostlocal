@@ -108,7 +108,6 @@ class AltPostLocal
   end
 
   def action act
-    pp act
     case act["type"]
     when "maildir"
       maildir act
@@ -126,7 +125,7 @@ class AltPostLocal
   end
 
   def pipe act
-    pipecmd = act["args"].map do |i|
+    pipecmd = (act["args"] || []).map do |i|
       if i == "${sender}"
         @sender
       elsif i == "${recipient}"
