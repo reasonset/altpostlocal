@@ -17,7 +17,7 @@ class AltPostLocal
   end
 
   def initialize sender, recipients
-    @config = YAML.load(File.read("/etc/altpostlocal/altpostlocal.yaml"))
+    @config = YAML.load(File.read("/etc/altpostlocal/altpostlocal.yaml"), aliases: true)
     @sender = sender
     @recipients = recipients
     @extension = Regexp.new @config["extension"] if @config["extension"]
