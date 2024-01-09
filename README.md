@@ -10,6 +10,8 @@ Configuration file is `/etc/altpostlocal/altpostlocal.yaml`.
 
 This is a [YAML 1.1](https://yaml.org/spec/1.1/) file.
 
+Please remind anchors and aliases because these are very useful.
+
 ## Root params
 
 |Key|Type|Description|
@@ -32,7 +34,7 @@ For example, destination address is `foo+bar+baz@example.com` and `Extensions` i
 `Extensions` value is a *RegExp* string, the behavior of Extensions is shown in simple code as follows:
 
 ```ruby
-extensions = RegExp.new(config["extensions"])
+extensions = Regexp.new(config["extensions"])
 username.rindex(extensions)
 ```
 
@@ -82,7 +84,8 @@ Save on `dir` as a Maildir.
 
 ```yaml
 type: pipe
-value: [<command>, <arguments...>]
+cmd: <command>,
+args: [<arguments...>]
 timeout: <int>
 onerror: Action
 ```
@@ -94,6 +97,8 @@ Write pipe to `cmd` with `args`.
 If optional `timeout` is set, raise error after `int` seconds.
 
 If optional `onerror` os set, treat specified action when pipe raises exception or pipe returns non-zero status instead of global rescue action.
+
+Hint: `args` is useful for override alias.
 
 ### dump
 
@@ -122,7 +127,17 @@ type: nothing
 
 Do nothing.
 
+This is useful if you simply want to destroy an e-mail.
 
+### nouser
+
+```yaml
+type: nouser
+```
+
+Exit with status 67 immidiately.
+
+Caution: *This action ends script process.*
 
 # Replace Postfix's local/virtual
 
@@ -135,7 +150,7 @@ altpostlocal    unix  -       n       n       -       -       pipe
   flags=F user=email argv=/usr/local/bin/altpostlocal -f ${sender} -- ${recipient}
 ```
 
-user and argv should be rewritten according to your environment.
+user and argv should be change according to your environment.
 
 ## configure main.cf
 

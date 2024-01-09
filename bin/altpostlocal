@@ -27,6 +27,7 @@ class AltPostLocal
   def main
     rematch
     @recipients.each do |recp|
+      @recipient = recp
       acts = match recp
       while acts.any? {|i| i["type"] == "alias" }
         acts = acts.map {|i| i["type"] == "alias" ? match(i["value"]) : i } 
@@ -100,8 +101,6 @@ class AltPostLocal
 
     # Convert to array.
     matchformat matched
-
-    matched
   end
 
   def matchformat matched
@@ -119,15 +118,28 @@ class AltPostLocal
       dump act
     when "nothing"
       nil
+    when "nouser"
+      exit 67
     else
       raise UndefinedAction
     end
   end
 
   def pipe act
+    pipecmd = act["args"].map do |i|
+      if i == "${sender}"
+        @sender
+      elsif i == "${recipient}"
+        @recipient
+      else
+        i
+      end
+    end
+    pipecmd.unshift act["cmd"]
+
     begin
       Timeout.timeout(act["timeout"]) do
-        IO.popen(act["value"], "w") do |io|
+        IO.popen(pipecmd, "w") do |io|
           io.print @body
           io.close
         end
