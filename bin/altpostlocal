@@ -119,6 +119,8 @@ class AltPostLocal
       nil
     when "nouser"
       exit 67
+    when "forward"
+      forward act
     else
       raise UndefinedAction
     end
@@ -176,6 +178,12 @@ class AltPostLocal
     filename = maildir_fn
     File.open(File.join(act["value"].delete_suffix("/"), "new", filename), "w") do |f|
       f.print @body
+    end
+  end
+
+  def forward act
+    IO.popen(["sendmail", *act["value"]], "w") do |io|
+      io.print @body
     end
   end
 

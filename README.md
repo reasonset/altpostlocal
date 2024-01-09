@@ -100,7 +100,7 @@ If optional `onerror` os set, treat specified action when pipe raises exception 
 
 Hint: `args` is useful for override alias.
 
-### dump
+### Dump
 
 ```yaml
 type: dump
@@ -119,7 +119,7 @@ JSON data is
 }
 ```
 
-### nothing
+### Nothing
 
 ```yaml
 type: nothing
@@ -129,7 +129,7 @@ Do nothing.
 
 This is useful if you simply want to destroy an e-mail.
 
-### nouser
+### NoUser
 
 ```yaml
 type: nouser
@@ -138,6 +138,28 @@ type: nouser
 Exit with status 67 immidiately.
 
 Caution: *This action ends script process.*
+
+### forward
+
+```yaml
+type: forward
+value: [<address...>]
+```
+
+Forward to address(es) with `sendmail` command.
+
+```yaml
+type: forward
+value: [foo@example.com]
+```
+
+is same as
+
+```yaml
+type: pipe
+cmd: sendmail
+args: [foo@example.com]
+```
 
 # Replace Postfix's local/virtual
 
