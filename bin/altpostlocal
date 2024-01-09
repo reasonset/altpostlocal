@@ -3,6 +3,7 @@ require 'yaml'
 require 'json'
 require 'optparse'
 require 'socket'
+require 'timeout'
 
 class AltPostLocal
   def self.parse
@@ -116,19 +117,37 @@ class AltPostLocal
       pipe act
     when "dump"
       dump act
+    when "nothing"
+      nil
     else
       raise UndefinedAction
     end
   end
 
   def pipe act
-    IO.popen(act["value"], "w") do |io|
-      io.print @body
-      io.close
+    begin
+      Timeout.timeout(act["timeout"]) do
+        IO.popen(act["value"], "w") do |io|
+          io.print @body
+          io.close
+        end
+      end
+    rescue => e
+      if act["onerror"]
+        action act["onerror"]
+      else
+        raise e
+      end
     end
 
     status = $?
-    raise PipeNonZero unless status.success?
+    unless status.success?
+      if act["onerror"]
+        action act["onerror"]
+      else
+        raise PipeNonZero 
+      end
+    end
   end
 
   def dump act

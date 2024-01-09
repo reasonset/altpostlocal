@@ -83,11 +83,17 @@ Save on `dir` as a Maildir.
 ```yaml
 type: pipe
 value: [<command>, <arguments...>]
+timeout: <int>
+onerror: Action
 ```
 
 Write pipe to `cmd` with `args`.
 
 `pipe` expands `${sender}` or `${receipient}` on `args`.
+
+If optional `timeout` is set, raise error after `int` seconds.
+
+If optional `onerror` os set, treat specified action when pipe raises exception or pipe returns non-zero status instead of global rescue action.
 
 ### dump
 
@@ -107,6 +113,16 @@ JSON data is
   "mail": "mail_body"
 }
 ```
+
+### nothing
+
+```yaml
+type: nothing
+```
+
+Do nothing.
+
+
 
 # Replace Postfix's local/virtual
 
