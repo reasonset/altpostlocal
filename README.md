@@ -66,6 +66,11 @@ Aliases are matched using the `String#downcase` method and **must be lowercase**
 If an alias containing a domain is not matched, the address is matched excluding the domain.
 For this reason, addresses such as abuse and mailer-daemon, which need to capture mail but do not need to be configured by domain, can be written easily by writing only aliases that do not include a domain.
 
+Special alias domain `@.` matches just user.
+For exmaple, `jrh@.` matches *just only* `jrh`.
+
+If you want alias in aliases, please use YAML's anchor and aliases.
+
 ## Action
 
 ### Maildir
