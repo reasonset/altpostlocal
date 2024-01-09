@@ -68,15 +68,6 @@ For this reason, addresses such as abuse and mailer-daemon, which need to captur
 
 ## Action
 
-### Alias
-
-```yaml
-type: alias
-value: <address>
-```
-
-Replace current address to `value` and re-matching.
-
 ### Maildir
 
 ```yaml
