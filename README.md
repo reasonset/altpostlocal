@@ -47,6 +47,8 @@ REMatch is performed before normal matching and replaces the recipient address.
 
 Caution: REMatch can potentially slow down script processing significantly.
 
+The result of REMatch also affects the value of `${recipient}` in `pipe`.
+
 ## Aliases
 
 Aliases is a `Mapping`.
@@ -58,6 +60,11 @@ address: Action[]
 `address` is email address *includes domain* like virtual(5). If domain is not included, matching is done by user name alone, regardless of domain.
 
 For example, `foo@example.com` matches `foo@exmaple.com` or with extension like `foo+bar@example.com`, and `foo` matches `foo@example.com`, `foo@example.net` or `foo`.
+
+Aliases are matched using the `String#downcase` method and **must be lowercase**.
+
+If an alias containing a domain is not matched, the address is matched excluding the domain.
+For this reason, addresses such as abuse and mailer-daemon, which need to capture mail but do not need to be configured by domain, can be written easily by writing only aliases that do not include a domain.
 
 ## Action
 

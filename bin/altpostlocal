@@ -66,11 +66,11 @@ class AltPostLocal
     matched = nil
 
     # Full match
-    matched = @config["aliases"][recp]
+    matched = @config["aliases"][recp.downcase]
     return matchformat matched if matched
 
     # Userpart extension
-    user, domain = *recp.split("@", 2)
+    user, domain = *recp.downcase.split("@", 2)
     until matched
       index = user.rindex(@extension) if @extension
       break unless index
@@ -82,7 +82,7 @@ class AltPostLocal
 
     # Without domain
     if domain
-      user, domain = *recp.split("@", 2)
+      user, domain = *recp.downcase.split("@", 2)
       matched = @config["aliases"][user]
       until matched
         index = user.rindex(@extension) if @extension
