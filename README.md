@@ -122,6 +122,8 @@ JSON data is
 }
 ```
 
+Dumped JSON can be attempted to be redistributed using `altpostlocal -j jsonfile.json`.
+
 ### Nothing
 
 ```yaml

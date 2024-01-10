@@ -216,7 +216,7 @@ class AltPostLocal
         end
       end
     else
-      exit 78
+      exit(@config["die_quietly"] ? 0 : 78)
     end
   rescue => e
     if @config["die_quietly"]
