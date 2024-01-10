@@ -9,19 +9,32 @@ class AltPostLocal
   def self.parse
     op = OptionParser.new
     opts = {}
+    op.on("-j", "--json")
     op.on("-f from", "--sender")
     op.parse!(ARGV, into: opts)
-    opts[:recipients] = ARGV
 
-    opts
+    mail = {}
+
+    if opts[:json]
+      mailjson = JSON.load(ARGF)
+      mail[:sender] = mailjson["sender"]
+      mail[:recipients] = mailjson["recipients"]
+      mail[:body] = mail["mail"]
+    else
+      mail[:sender] = opts[:sender]
+      mail[:recipients] = ARGV
+      mail[:body] = STDIN.read
+    end
+
+    mail
   end
 
-  def initialize sender, recipients
+  def initialize mail
     @config = YAML.load(File.read("/etc/altpostlocal/altpostlocal.yaml"), aliases: true)
-    @sender = sender
-    @recipients = recipients
+    @sender = mail[:sender]
+    @recipients = mail[:recipients]
     @extension = Regexp.new @config["extension"] if @config["extension"]
-    @body = STDIN.read
+    @body = mail[:body]
   end
 
   def main
@@ -173,6 +186,7 @@ class AltPostLocal
       JSON.dump({
         "sender" => @sender,
         "recipients" => @recipients,
+        "recipient" => @recipient,
         "mail": @body
       }, f)
     end
@@ -193,15 +207,11 @@ class AltPostLocal
 
   def onerror
     if String === @config["rescue"] and File.directory? @config["rescue"]
-      filename = maildir_fn
-      File.open(File.join(@config["rescue"].delete_suffix("/"), filename), "w") do |f|
-        if @config["rescue_json"]
-          JSON.dump({
-            "sender" => @sender,
-            "recipients" => @recipients,
-            "mail" => @body
-          }, f)
-        else
+      if @config["rescue_json"]
+        dump({"type" => "dump", "value" => @config["rescue"].delete_suffix("/")})
+      else
+        filename = maildir_fn
+        File.open(File.join(@config["rescue"].delete_suffix("/"), filename), "w") do |f|
           f.print @body
         end
       end
@@ -235,6 +245,6 @@ class AltPostLocal
   end
 end
 
-opts = AltPostLocal.parse
-apl = AltPostLocal.new opts[:sender], opts[:recipients]
+mail = AltPostLocal.parse
+apl = AltPostLocal.new mail
 apl.main
