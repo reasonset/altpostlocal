@@ -78,10 +78,13 @@ If you want alias in aliases, please use YAML's anchor and aliases.
 ```yaml
 type: maildir
 value: <dir>
+junk: <bool>
 ```
 
-Save on `dir` as a Maildir.
+Save on `$dir/new` as a Maildir.
 `dir` should be absolute directory path.
+
+If optional `junk` is true, save mail tp `$dir/.Junk/new`. It is maybe looks as junk mail from IMAP client software.
 
 ### pipe
 

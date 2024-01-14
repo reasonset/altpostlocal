@@ -4,6 +4,7 @@ require 'json'
 require 'optparse'
 require 'socket'
 require 'timeout'
+require 'fileutils'
 
 class AltPostLocal
   def self.parse
@@ -194,7 +195,12 @@ class AltPostLocal
 
   def maildir act
     filename = maildir_fn
-    File.open(File.join(act["value"].delete_suffix("/"), "new", filename), "w") do |f|
+    path = act["junk"] ? File.join(act["value"].delete_suffix("/"), ".Junk", "new", filename) : File.join(act["value"].delete_suffix("/"), "new", filename)
+    unless File.exist? File.dirname path
+      FileUtils.mkpath File.dirname path
+    end
+
+    File.open(path, "w") do |f|
       f.print @body
     end
   end
