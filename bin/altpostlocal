@@ -20,7 +20,7 @@ class AltPostLocal
       mailjson = JSON.load(ARGF)
       mail[:sender] = mailjson["sender"]
       mail[:recipients] = mailjson["recipients"]
-      mail[:body] = mail["mail"]
+      mail[:body] = mailjson["mail"]
     else
       mail[:sender] = opts[:sender]
       mail[:recipients] = ARGV
@@ -92,9 +92,11 @@ class AltPostLocal
 
         user = user[0, index]
         matched = @config["aliases"][[user, domain].join("@")]
+        STDERR.printf("matched as %s", [user, domain].join("@")) if matched
       end
     else
       matched = @config["aliases"][recp + "@."]
+      STDERR.printf("matched as %s@.", recp) if matched
     end
     return matchformat matched if matched
 
@@ -108,12 +110,14 @@ class AltPostLocal
   
         user = user[0, index]
         matched = @config["aliases"][user]
+        STDERR.printf("matched as %s", user) if matched
       end
       return matchformat matched if matched
     end
 
     # Default action
     unless matched
+      STDERR.puts("default action") if matched
       matched = @config["default"]
     end
 
