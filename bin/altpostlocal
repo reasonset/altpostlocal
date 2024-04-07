@@ -101,8 +101,8 @@ class AltPostLocal
     return matchformat matched if matched
 
     # Without domain
+    user, domain = *recp.downcase.split("@", 2)
     if domain
-      user, domain = *recp.downcase.split("@", 2)
       matched = @config["aliases"][user]
       until matched
         index = user.rindex(@extension) if @extension
@@ -112,6 +112,13 @@ class AltPostLocal
         matched = @config["aliases"][user]
         STDERR.printf("matched as %s", user) if matched
       end
+      return matchformat matched if matched
+    end
+
+    # Domain catch-all
+    user, domain = *recp.downcase.split("@", 2)
+    if domain
+      matched = @config["aliases"]["@" + domain]
       return matchformat matched if matched
     end
 

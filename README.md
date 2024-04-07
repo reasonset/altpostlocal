@@ -69,6 +69,18 @@ For this reason, addresses such as abuse and mailer-daemon, which need to captur
 Special alias domain `@.` matches just user.
 For exmaple, `jrh@.` matches *just only* `jrh`.
 
+Aliases beginning with `@` will be matched by domain regardless of user part. `@example.com` matches to `foo@example.com`, `bar@example.com` or `foo+bar@example.com`
+Domain matching is performed when user part is not matched.
+
+Address matching is performed in the following steps.
+
+1. Match to entire address
+2. Match while shortening user part extensions
+3. Match by user part without domain
+4. Match while shortening user part extensions without domain
+5. Match by domain only (domain catch-all)
+6. Default action
+
 If you want alias in aliases, please use YAML's anchor and aliases.
 
 ## Action
