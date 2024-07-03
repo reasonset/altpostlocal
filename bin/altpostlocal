@@ -280,7 +280,7 @@ class AltPostLocal
   end
 end
 
-STDOUT.reopen(File.open("/var/log/altpostlocal.log", "a+"))
+#STDOUT.reopen(File.open("/var/log/altpostlocal.log", "a+"))
 mail = AltPostLocal.parse
 apl = AltPostLocal.new mail
 apl.main
