@@ -40,6 +40,10 @@ class AltPostLocal
     @log_id = SecureRandom.uuid
   end
 
+  def open_logfile
+    STDOUT.reopen(File.open((@config["logfile"] || "/var/log/altpostlocal.log"), "a+"))
+  end
+
   def main
     rematch
     @recipients.each do |recp|
@@ -84,7 +88,10 @@ class AltPostLocal
 
     # Full match
     matched = @config["aliases"][recp.downcase]
-    return matchformat matched if matched
+    if matched
+      matchinfo recp.downcase
+      return matchformat matched 
+    end
 
     # Userpart extension
     user, domain = *recp.downcase.split("@", 2)
@@ -95,11 +102,11 @@ class AltPostLocal
 
         user = user[0, index]
         matched = @config["aliases"][[user, domain].join("@")]
-        STDERR.printf("matched as %s", [user, domain].join("@")) if matched
+        matchinfo [user, domain].join("@") if matched
       end
     else
       matched = @config["aliases"][recp + "@."]
-      STDERR.printf("matched as %s@.", recp) if matched
+      matchinfo recp if matched
     end
     return matchformat matched if matched
 
@@ -113,7 +120,7 @@ class AltPostLocal
   
         user = user[0, index]
         matched = @config["aliases"][user]
-        STDERR.printf("matched as %s", user) if matched
+        matchinfo user if matched
       end
       return matchformat matched if matched
     end
@@ -122,12 +129,15 @@ class AltPostLocal
     user, domain = *recp.downcase.split("@", 2)
     if domain
       matched = @config["aliases"]["@" + domain]
-      return matchformat matched if matched
+      if matched
+        matchinfo "@" + domain
+        return matchformat matched
+      end
     end
 
     # Default action
     unless matched
-      STDERR.puts("default action") if matched
+      matchinfo "NOMATCH"
       matched = @config["default"]
     end
 
@@ -136,17 +146,11 @@ class AltPostLocal
   end
 
   def matchformat matched
-    if Array === matched
-      log sprintf("Matched %s", matched.join(","))
-      matched
-    else
-      log sprintf("Matched %s", matched)
-      [matched]
-    end
+    Array === matched ? matched : [matched]
   end
 
   def action act
-    log sprintf("Act <>", act["type"]) unless act["type"] == "discard"
+    log sprintf("Act <%s>", act["type"]) unless act["type"] == "discard"
     case act["type"]
     when "maildir"
       maildir act
@@ -187,6 +191,7 @@ class AltPostLocal
         end
       end
     rescue => e
+      log sprintf("PIPE ERROR %s", e)
       if act["onerror"]
         action act["onerror"]
       else
@@ -196,6 +201,7 @@ class AltPostLocal
 
     status = $?
     unless status.success?
+      log "PIPE FAILED #{status.to_i}"
       if act["onerror"]
         action act["onerror"]
       else
@@ -265,7 +271,11 @@ class AltPostLocal
   private
 
   def log msg
-    printf("[%s][%s] %s\n", Time.now.strftime('%Y%m%d_%H%M%S', @log_id, msg))
+    printf("[%s][%s] %s\n", Time.now.strftime('%Y%m%d_%H%M%S'), @log_id, msg)
+  end
+
+  def matchinfo ptn
+    log(sprintf("Matched [%s]", ptn))
   end
 
   #Exceptions
@@ -280,7 +290,7 @@ class AltPostLocal
   end
 end
 
-#STDOUT.reopen(File.open("/var/log/altpostlocal.log", "a+"))
 mail = AltPostLocal.parse
 apl = AltPostLocal.new mail
+apl.open_logfile
 apl.main
