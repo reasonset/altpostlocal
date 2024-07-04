@@ -40,8 +40,8 @@ class AltPostLocal
     @log_id = SecureRandom.uuid
   end
 
-  def open_logfile
-    STDOUT.reopen(File.open((@config["logfile"] || "/var/log/altpostlocal.log"), "a+"))
+  def connect_journal
+    STDOUT.reopen IO.popen(["systemd-cat", "-t", "altpostlocal"], "w")
   end
 
   def main
@@ -292,5 +292,5 @@ end
 
 mail = AltPostLocal.parse
 apl = AltPostLocal.new mail
-apl.open_logfile
+apl.connect_journal
 apl.main
