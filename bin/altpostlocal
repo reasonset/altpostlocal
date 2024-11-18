@@ -86,11 +86,18 @@ class AltPostLocal
   def match recp
     matched = nil
 
+    # Full match (only)
+    matched = @config["aliases"][recp.downcase + "="]
+    if matched
+      matchinfo(recp.downcase + "=")
+      return matchformat matched
+    end
+
     # Full match
     matched = @config["aliases"][recp.downcase]
     if matched
       matchinfo recp.downcase
-      return matchformat matched 
+      return matchformat matched
     end
 
     # Userpart extension

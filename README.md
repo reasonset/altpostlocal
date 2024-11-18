@@ -63,6 +63,9 @@ For example, `foo@example.com` matches `foo@exmaple.com` or with extension like 
 
 Aliases are matched using the `String#downcase` method and **must be lowercase**.
 
+If the address ends in `=`, it applies only to an exact match to the address.
+For example, if `foo@example.com=` is set, it will only match `foo@example.com` and not `foo+bar@example.com`.
+
 If an alias containing a domain is not matched, the address is matched excluding the domain.
 For this reason, addresses such as abuse and mailer-daemon, which need to capture mail but do not need to be configured by domain, can be written easily by writing only aliases that do not include a domain.
 
@@ -74,12 +77,13 @@ Domain matching is performed when user part is not matched.
 
 Address matching is performed in the following steps.
 
+1. Match to entire address + `=`
 1. Match to entire address
-2. Match while shortening user part extensions
-3. Match by user part without domain
-4. Match while shortening user part extensions without domain
-5. Match by domain only (domain catch-all)
-6. Default action
+1. Match while shortening user part extensions
+1. Match by user part without domain
+1. Match while shortening user part extensions without domain
+1. Match by domain only (domain catch-all)
+1. Default action
 
 If you want alias in aliases, please use YAML's anchor and aliases.
 
