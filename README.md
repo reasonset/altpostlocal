@@ -153,16 +153,6 @@ Do nothing.
 
 This is useful if you simply want to destroy an e-mail.
 
-### NoUser
-
-```yaml
-type: nouser
-```
-
-Exit with status 67 immidiately.
-
-Caution: *This action ends script process.*
-
 ### forward
 
 ```yaml

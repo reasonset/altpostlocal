@@ -169,8 +169,6 @@ class AltPostLocal
       nil
     when "discard"
       nil
-    when "nouser"
-      exit 67
     when "forward"
       forward act
     else
